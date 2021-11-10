@@ -1,0 +1,10 @@
+SilverDragonTile	RatsTile		DesertedTile	
+RatsTile	GoldTile	RatsTile	GoldTile	GoldTile
+GoldTile	DesertedTile		DesertedTile	RatsTile
+DesertedTile	GoldTile	DesertedTile	GoldTile	
+GoldTile		GoldTile	RatsTile	DesertedTile
+DesertedTile	DesertedTile	StartingTile	DesertedTile	GoldTile
+GoldTile	GoldTile	DesertedTile	RatsTile	GargoyleTile
+DesertedTile	GargoyleTile	GoldTile	DesertedTile	DesertedTile
+DesertedTile	GoldTile	RatsTile		RatsTile
+	DesertedTile	DesertedTile		SilverDragonTile
