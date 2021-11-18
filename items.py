@@ -12,6 +12,14 @@ class Gold(Item):
     def __init__(self, amount):
         self.amount = amount
         super().__init__("Gold","InGame Currency to buy equipments for your hero", amount)
+    def balance(self):
+        return self.amount
+    def addGold(self, amount):
+        self.amount += amount
+    def removeGold(self, amount):
+        self.amount -= amount
+    def __str__(self):
+        return "{} gold coins".format(self.amount)
 
 class Weapon(Item):
     """ Weapons for player """
@@ -19,7 +27,7 @@ class Weapon(Item):
         self.damage = damage
         super().__init__(name, desc, val)
     def __str__(self):
-        return "This is a {} which deals {} damage in one go.".format(self.name, self.damage)
+        return "A {} which deals {} damage in one go.".format(self.name, self.damage)
 
 class Sword(Weapon):
     """ The prophesized sword said to bring an end to evil """

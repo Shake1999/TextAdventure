@@ -29,12 +29,13 @@ class MapTile:
         """ Returns all available actions in the current tile """
         options = self.available_moves()
         options.append(actions.ViewInventory())
+        options.append(actions.ViewStats())
         return options
 
 class StartingTile(MapTile):
     def introduction(self):
-        return """It's your first mission as a Bounty Hunter. 
-                Find and kill the Silver Dragon and you will become a famous bounty hunter"""
+        return """\n\n\t*** It's your first mission as a Bounty Hunter. 
+                Find and kill the Silver Dragon and you will become a famous bounty hunter ***\n"""
     
     def modify_player(self, player):
         pass
@@ -46,7 +47,7 @@ class LootTile(MapTile):
         super().__init__(x,y)
     
     def add_loot(self, player):
-        player.inventory.append(self.item)
+        pass
     
     def modify_player(self, player):
         self.add_loot(player)
@@ -59,15 +60,17 @@ class EnemyTile(MapTile):
     
     def modify_player(self, player):
         if self.enemy.isAlive():
-            totEnemyDamage = self.enemy.damage * self.enemy.speed
-            totPlayerDamage = player.weapon.damage * player.speed
-            pass
+            player.hp -= self.enemy.damage
+            print("\t*** {} did {} damage. ***\n\t*** You have {} HP remaining.***\n".format(self.enemy.name, self.enemy.damage, player.hp))
     
     def available_actions(self):
         if self.enemy.isAlive():
-            return actions.Attack(enemy=self.enemy)
+            return [ actions.Attack(enemy=self.enemy), actions.Flee(tile=self) ]
         else:
-            return self.available_moves()
+            options = self.available_moves()
+            options.append(actions.ViewInventory())
+            options.append(actions.ViewStats())
+            return options
 
 class MerchantTile(MapTile):
     """ Base Merchant Tile Class """
@@ -87,7 +90,7 @@ class MerchantTile(MapTile):
         player.inventory += itemBought
     
     def modify_player(self, player):
-        self.processTransaction(_, player)
+        self.processTransaction(0, player) # 0 is a placeholder for now.
 
 class RatsTile(EnemyTile):
     def __init__(self, x, y):
@@ -95,7 +98,7 @@ class RatsTile(EnemyTile):
 
     def introduction(self):
         if self.enemy.isAlive():
-            return " A rat surfaces from a cracked wall and chares at you. "
+            return " A rat surfaces from a cracked wall and charges at you. "
         else:
             return " There is a dead rotting rat lying in the floor and it smells like death. "
     
@@ -116,6 +119,9 @@ class GoldTile(LootTile):
     
     def introduction(self):
         return " You found gold in the room. No one's looking so you stole it."
+    
+    def add_loot(self, player):
+        player.inventory["Gold"].addGold(self.item.balance())
 
 class DesertedTile(MapTile):
     def introduction(self):
@@ -130,10 +136,10 @@ class SilverDragonTile(EnemyTile):
 
     def introduction(self):
         if self.enemy.isAlive():
-            return """ You have found the layer of the unforgiving and infamous fire-breathing silver Dragon.
-            Defeat the beast in combat to receive the mission bounty or get roasted alive. """
+            return """\n\t*** You have found the layer of the unforgiving and infamous fire-breathing silver Dragon.
+            Defeat the beast in combat to receive the mission bounty or get roasted alive. ***\n"""
         else:
-            return """ The dead caracass of the giant silver dragon was the beginning of a new journey."""
+            return """\n\t*** The dead caracass of the giant silver dragon was the beginning of a new journey. ***\n"""
     
     def modify_player(self, player):
         player.victory = True

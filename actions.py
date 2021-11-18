@@ -29,8 +29,17 @@ class MoveWest(Action):
 class ViewInventory(Action):
     """ Prints the player's inventory """
     def __init__(self):
-        super().__init__(Player.inventorySummary, "View inventory", "i")
+        super().__init__(Player.inventorySummary, "View Inventory", "i")
+
+class ViewStats(Action):
+    """ Prints Player stats """
+    def __init__(self):
+        super().__init__(Player.statSummary, "View Player Stats", "p")
 
 class Attack(Action):
     def __init__(self, enemy):
-        super().__init__(Player.attack, "Attack", "a", enemy)
+        super().__init__(method=Player.attack, name="Attack", hotkey="a", enemy=enemy)
+
+class Flee(Action):
+    def __init__(self, tile):
+        super().__init__(method=Player.flee, name="Flee", hotkey="f", tile=tile)
