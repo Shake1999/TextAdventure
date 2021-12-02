@@ -1,4 +1,5 @@
 import items, enemies, actions, world
+import random
 
 class MapTile:
     """ Abstract Base Class """
@@ -30,6 +31,7 @@ class MapTile:
         options = self.available_moves()
         options.append(actions.ViewInventory())
         options.append(actions.ViewStats())
+        options.append(actions.Heal())
         return options
 
 class StartingTile(MapTile):
@@ -44,13 +46,16 @@ class LootTile(MapTile):
     """ Base Loot Tile Class """
     def __init__(self, x, y, item):
         self.item = item
+        self.flag = True
         super().__init__(x,y)
     
     def add_loot(self, player):
-        pass
+        raise NotImplementedError
     
     def modify_player(self, player):
-        self.add_loot(player)
+        if self.flag:
+            self.add_loot(player)
+            self.flag = False
 
 class EnemyTile(MapTile):
     """ Base Enemy Tile Class """
@@ -61,36 +66,86 @@ class EnemyTile(MapTile):
     def modify_player(self, player):
         if self.enemy.isAlive():
             player.hp -= self.enemy.damage
-            print("\t*** {} did {} damage. ***\n\t*** You have {} HP remaining.***\n".format(self.enemy.name, self.enemy.damage, player.hp))
+            print("\t*** {} did {} damage. ***\n".format(self.enemy.name, self.enemy.damage))
+            if player.isAlive():
+                print("\t*** You have {} HP remaining. ***\n".format(player.hp))
+            else:
+                print("\t*** You died in the attack. ***\n\t *** THE END ***\n")
     
     def available_actions(self):
         if self.enemy.isAlive():
-            return [ actions.Attack(enemy=self.enemy), actions.Flee(tile=self) ]
+            return [ actions.Attack(enemy=self.enemy), actions.Flee(tile=self) , actions.Heal()]
         else:
             options = self.available_moves()
             options.append(actions.ViewInventory())
             options.append(actions.ViewStats())
+            options.append(actions.Heal())
             return options
 
 class MerchantTile(MapTile):
     """ Base Merchant Tile Class """
     def __init__(self, x, y, productList):
         self.productList = productList
-        self.displayProductList()
         super().__init__(x,y)
-    
+     
     def displayProductList(self):
-        print(" I am selling the following items ")
-        for item in self.productList:
-            print(item.name + "\t" + item.value)
-    
-    def processTransaction(self, itemID, player):
-        itemBought = self.productList.pop(itemID)
-        player.inventory.gold -= itemBought.value
-        player.inventory += itemBought
+        raise NotImplementedError
     
     def modify_player(self, player):
-        self.processTransaction(0, player) # 0 is a placeholder for now.
+        pass
+
+    def available_actions(self):
+        options = self.available_moves()
+        options.append(actions.ViewInventory())
+        options.append(actions.ViewStats())
+        options.append(actions.Heal())
+        options.append(actions.Buy(productList = self.productList))
+        return options
+
+class WepMerchantTile(MerchantTile):
+    def __init__(self,x,y):
+        w1 = items.Sword(random.randint(50,70), random.randint(170, 190))
+        w2 = items.Sword(random.randint(70,90), random.randint(190,220))
+        w3 = items.MagicWand(random.randint(60,80), random.randint(200, 250))
+        w4 = items.MagicWand(random.randint(80,100), random.randint(250,300))
+        w5 = items.Dagger()
+        index = 1
+        self.productList = {}
+        for item in random.sample([w1,w2,w3,w4,w5], 2):
+            self.productList[index] = item
+            index += 1
+        super().__init__(x,y, self.productList)
+    
+    def displayProductList(self):
+        myWindow = "\n\t******* MERCHANT WINDOW *******\n\t*** I am selling the following items ***\n"
+        for key in self.productList:
+            myWindow += "\t [{}]   {} (Damage : {}) for  {} coins\n".format(key, self.productList[key].name, self.productList[key].damage, self.productList[key].value)
+        myWindow += "\n"
+        return myWindow
+    
+    def introduction(self):
+        merchantWindow = self.displayProductList()
+        intro = "\n\t*** You found a small town. You found lodging for the night and \n\tthe next day you explored the town to discover a Merchant of deadly weapons. ***\n"
+        return  intro + merchantWindow
+
+class HerbsMerchantTile(MerchantTile):
+    def __init__(self, x, y):
+        self.productList = {}
+        self.productList[1] = items.Medicine(random.randint(20,30), random.randint(120,130))
+        self.productList[2] = items.Medicine(random.randint(50,60), random.randint(150,170))
+        super().__init__(x,y, self.productList)
+    
+    def displayProductList(self):
+        myWindow = "\n\t******* MERCHANT WINDOW *******\n\t*** I am selling the following herbs ***\n"
+        for key in self.productList:
+            myWindow += "\t [{}]   A Herbal Medicine (Healing Amount : {}) for  {} coins\n".format(key, self.productList[key].healing, self.productList[key].value)
+        myWindow += "\n"
+        return myWindow
+    
+    def introduction(self):
+        merchantWindow = self.displayProductList()
+        intro = "\n\t*** You found a small town. You found lodging for the night and \n\tthe next day you explored the town to discover a Merchant of remarkable medicinal herbs. ***\n"
+        return  intro + merchantWindow
 
 class RatsTile(EnemyTile):
     def __init__(self, x, y):
@@ -98,9 +153,9 @@ class RatsTile(EnemyTile):
 
     def introduction(self):
         if self.enemy.isAlive():
-            return " A rat surfaces from a cracked wall and charges at you. "
+            return "\n\t*** A rat surfaces from a cracked wall and charges at you. ***\n"
         else:
-            return " There is a dead rotting rat lying in the floor and it smells like death. "
+            return "\n\t*** There is a dead rotting rat lying in the floor and it smells like death. ***\n"
     
 class GargoyleTile(EnemyTile):
     def __init__(self, x, y):
@@ -108,27 +163,10 @@ class GargoyleTile(EnemyTile):
     
     def introduction(self):
         if self.enemy.isAlive():
-            return """ A gigantic and ferocious looking Gargoyle is awaken from his sleep as you ventured closer to it. 
-            It is angry and wants to rip you to pieces"""
+            return """\n\t*** A gigantic and ferocious looking Gargoyle is awaken from his sleep as you ventured closer to it. 
+            It is angry and wants to rip you to pieces. ***\n"""
         else:
-            return """ A still gargoyle lay dead with his eyes wide open """
-
-class GoldTile(LootTile):
-    def __init__(self, x, y):
-        super().__init__(x, y, items.Gold(100))
-    
-    def introduction(self):
-        return " You found gold in the room. No one's looking so you stole it."
-    
-    def add_loot(self, player):
-        player.inventory["Gold"].addGold(self.item.balance())
-
-class DesertedTile(MapTile):
-    def introduction(self):
-        return " You are venturing through a deserted piece of land. Nothing in sight for miles. "
-    
-    def modify_player(self, player):
-        pass
+            return """\n\t*** A still gargoyle lay dead with his eyes wide open ***\n"""
 
 class SilverDragonTile(EnemyTile):
     def __init__(self, x, y):
@@ -141,5 +179,49 @@ class SilverDragonTile(EnemyTile):
         else:
             return """\n\t*** The dead caracass of the giant silver dragon was the beginning of a new journey. ***\n"""
     
+    #def modify_player(self, player):
+    #    player.victory = True
+
+class DesertedTile(MapTile):
+    def introduction(self):
+        return "\n\t*** You are venturing through a deserted piece of land. Nothing in sight for miles. ***\n"
+    
     def modify_player(self, player):
-        player.victory = True
+        pass
+
+class GoldTile(LootTile):
+    def __init__(self, x, y):
+        self.amount = random.randint(100,150)
+        super().__init__(x, y, items.Gold(self.amount))
+    
+    def introduction(self):
+        return "\n\t*** You found {} gold coins hidden behind a rock. No one's looking so you stole it. ***\n".format(self.amount)
+    
+    def add_loot(self, player):
+        player.inventory["Gold"].addGold(self.amount)
+
+class SwordTile(LootTile):
+    def __init__(self, x, y):
+        dmg = random.randint(30,40)
+        val = random.randint(150,160)
+        super().__init__(x, y, items.Sword(dmg, val))
+    
+    def introduction(self):
+        return """\n\t*** You found a shiny sword stuck in between rocks. 
+        \tYou must be the prophesized one because the sword comes off easily as if it's meant to be. ***\n"""
+    
+    def add_loot(self, player):
+        player.inventory["Weapons"].append(self.item)
+
+class WandTile(LootTile):
+    def __init__(self, x, y):
+        dmg = random.randint(40,50)
+        val = random.randint(150,175)
+        super().__init__(x, y, items.MagicWand(dmg, val))
+    
+    def introduction(self):
+        return """\n\t*** You found a wooden shaft which looked weird at first but upon careful examination,
+                    you learned that it is a powerful magic wand from centuries ago. ***\n"""
+    
+    def add_loot(self, player):
+        player.inventory["Weapons"].append(self.item)

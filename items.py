@@ -31,13 +31,13 @@ class Weapon(Item):
 
 class Sword(Weapon):
     """ The prophesized sword said to bring an end to evil """
-    def __init__(self):
-        super().__init__("Sword", "The prophesized sword said to bring an end to evil", 200, 30)
+    def __init__(self, dmg, val):
+        super().__init__("Sword", "The prophesized sword said to bring an end to evil", val, dmg)
 
 class MagicWand(Weapon):
     """ A skilled wizzard only needs his wand to destroy all his enemies """
-    def __init__(self):
-        super().__init__("Magic Wand", "An ancient wooden wand for skilled wizzards only", 250, 35)
+    def __init__(self, dmg, val):
+        super().__init__("Magic Wand", "An ancient wooden wand for skilled wizzards only", val, dmg)
 
 class Dagger(Weapon):
     """ A small dagger which has gone blunt over the years """
@@ -45,6 +45,8 @@ class Dagger(Weapon):
         super().__init__("Dagger", "A small dagger which has gone blunt over the years", 20, 15)
 
 class Medicine(Item):
-    def __init__(self):
-        self.healing = 40
-        super().__init__("Medicine","A healing potion which restores some HP", 50)
+    def __init__(self, healValue, val):
+        self.healing = healValue
+        super().__init__("Medicine","A healing potion which restores some HP", val)
+    def __str__(self):
+        return " A Unique herbal medicine which restores {} HP.".format(self.healing)

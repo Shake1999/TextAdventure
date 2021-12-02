@@ -43,3 +43,15 @@ class Attack(Action):
 class Flee(Action):
     def __init__(self, tile):
         super().__init__(method=Player.flee, name="Flee", hotkey="f", tile=tile)
+
+class Heal(Action):
+    def __init__(self):
+        super().__init__(Player.heal, "Heal HP", "h")
+
+class Buy(Action):
+    def __init__(self, productList):
+        super().__init__(method=Player.buy, name="Buy", hotkey="b", productList= productList)
+
+class Sell(Action):
+    def __init__(self, itemID):
+        super().__init__(method=Player.sell, name="Sell", hotkey="se", itemID = itemID)
