@@ -100,6 +100,7 @@ class MerchantTile(MapTile):
         options.append(actions.ViewStats())
         options.append(actions.Heal())
         options.append(actions.Buy(productList = self.productList))
+        options.append(actions.Sell())
         return options
 
 class WepMerchantTile(MerchantTile):
@@ -179,8 +180,20 @@ class SilverDragonTile(EnemyTile):
         else:
             return """\n\t*** The dead caracass of the giant silver dragon was the beginning of a new journey. ***\n"""
     
-    #def modify_player(self, player):
-    #    player.victory = True
+    def modify_player(self, player):
+        if self.enemy.isAlive():
+            player.hp -= self.enemy.damage
+            print("\t*** {} did {} damage. ***\n".format(self.enemy.name, self.enemy.damage))
+            if player.isAlive():
+                print("\t*** You have {} HP remaining. ***\n".format(player.hp))
+            else:
+                print("\t*** You died in the attack. ***\n\t *** THE END ***\n")
+        else:
+            player.victory = True
+            
+    def available_actions(self):
+        if self.enemy.isAlive():
+            return [ actions.Attack(enemy=self.enemy), actions.Flee(tile=self) , actions.Heal()]
 
 class DesertedTile(MapTile):
     def introduction(self):

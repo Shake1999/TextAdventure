@@ -4,7 +4,7 @@ import random
 class Player():
     """ A super class for all player types """
     def __init__(self):
-        self.hp = 100
+        self.hp = 150
         self.speed = 10
         self.inventory = {
                             "Gold": items.Gold(50),
@@ -20,14 +20,18 @@ class Player():
     def inventorySummary(self):
         print("\n\n\t*** PLAYER INVENTORY ***")
         print("   Gold stash : {}".format(self.inventory["Gold"].balance()))
+        index = 1
         if len(self.inventory["Weapons"]) > 0:
             print("   Weapon stash :")
             for w in self.inventory["Weapons"]:
-                print("\t\t",w)
+                print("\t [{}] {}".format(index, w))
+                index += 1
+        index = 1
         if len(self.inventory["Medicine"]) > 0:
             print("   Medicine stash :")
             for m in self.inventory["Medicine"]:
-                print("\t\t",m)
+                print("\t [{}] {}".format(index,m))
+                index += 1
         print("\n\n")
     
     def statSummary(self):
@@ -78,15 +82,15 @@ class Player():
         if len(self.inventory["Medicine"])==0:
             print("\n\t*** You do not have any medicine in your inventory ***\n")
             return
-        if self.hp == 100:
+        if self.hp == 150:
             print("\n\t*** You do not need to heal yourself. You have max HP (100). ***\n")
             return
         optimalMedicine = None
         index = 0
         finalResort = None
         finalindex = 0
-        minDif = 100
-        healingNeeded = 100 - self.hp
+        minDif = 150
+        healingNeeded = 150 - self.hp
         i = 0
         for med in self.inventory["Medicine"]:
             Dif = healingNeeded - med.healing
@@ -104,8 +108,8 @@ class Player():
             index = finalindex
         self.inventory["Medicine"].pop(index)
         self.hp += optimalMedicine.healing
-        if self.hp > 100:
-            self.hp = 100
+        if self.hp > 150:
+            self.hp = 150
             print("\n\t*** You used Medicine to fully restore your health. ***\n")
         else:
             print("\n\t*** You used Medicine to heal {} HP ***".format(optimalMedicine.healing))
@@ -132,11 +136,34 @@ class Player():
             if keepGoing == 'n':
                 break
     
-    def sell(self, itemID):
-        item = self.inventory["Weapons"][itemID-1]
-        self.inventory["Gold"].addGold(item.value)
-        del self.inventory["Weapons"][itemID-1]
-        print("\n\t*** You sold {} to the Merchant and gained {} gold coins ***".format(item.name, item.value))
+    def sell(self):
+        while True:
+            tosell = input("Do you want to sell Medicine (m) or Weapon (w): ")
+            if tosell == 'm':
+                itemID = int(input("Enter the item ID you want to sell : "))
+                if itemID <=len(self.inventory["Medicine"]):
+                    item = self.inventory["Medicine"][itemID-1]
+                    self.inventory["Gold"].addGold(item.value)
+                    self.inventory["Medicine"].pop(itemID-1)
+                    print("\n\t*** You sold {} to the Merchant and gained {} gold coins ***".format(item.name, item.value))
+                else:
+                    print("\nInvalid item ID! Refer to your inventory below before making a choice.")
+                    self.inventorySummary()
+            elif tosell == 'w':
+                itemID = int(input("Enter the item ID you want to sell : "))
+                if itemID <=len(self.inventory["Weapons"]):
+                    item = self.inventory["Weapons"][itemID-1]
+                    self.inventory["Gold"].addGold(item.value)
+                    self.inventory["Weapons"].pop(itemID-1)
+                    print("\n\t*** You sold {} to the Merchant and gained {} gold coins ***".format(item.name, item.value))
+                else:
+                    print("\nInvalid item ID! Refer to your inventory below before making a choice.")
+                    self.inventorySummary()
+            else:
+                print("Invalid Choice. Valid choices are 'm' or 'w'")
+            keepGoing = input("Want to sell more items (y/n) : ")
+            if keepGoing == 'n':
+                break
 
     def do_action(self, action, **kwargs):
         action_method = getattr(self, action.method.__name__)

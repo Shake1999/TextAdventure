@@ -53,5 +53,5 @@ class Buy(Action):
         super().__init__(method=Player.buy, name="Buy", hotkey="b", productList= productList)
 
 class Sell(Action):
-    def __init__(self, itemID):
-        super().__init__(method=Player.sell, name="Sell", hotkey="se", itemID = itemID)
+    def __init__(self):
+        super().__init__(method=Player.sell, name="Sell", hotkey="se")
